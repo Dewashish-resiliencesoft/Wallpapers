@@ -49,15 +49,55 @@ class _HomeScreenView extends StatefulWidget {
   State<_HomeScreenView> createState() => _HomeScreenViewState();
 }
 
-class _HomeScreenViewState extends State<_HomeScreenView> {
+class _HomeScreenViewState extends State<_HomeScreenView>
+    with RestorationMixin {
   late ScrollController _scrollController;
   final CustomText customText = CustomText();
+
+  final RestorableInt _restorableIndex = RestorableInt(0);
+  final RestorableDouble _restorableScrollOffset = RestorableDouble(0.0);
+
+  @override
+  String? get restorationId => 'home_view';
+
+  static Route<Object?> _accountsRoute(BuildContext context, Object? args) {
+    return MaterialPageRoute(builder: (c) => const AccountsPage());
+  }
+
+  static Route<Object?> _allWallpapersRoute(
+    BuildContext context,
+    Object? args,
+  ) {
+    final category = args as String?;
+    return MaterialPageRoute(
+      builder: (c) => AllWallpapersPage(category: category ?? ''),
+    );
+  }
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_restorableIndex, 'selected_index');
+    registerForRestoration(_restorableScrollOffset, 'scroll_offset');
+
+    // Apply restored selected index and scroll offset to the UI
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        context.read<BottomNavCubit>().updateIndex(_restorableIndex.value);
+      } catch (_) {}
+      if (_restorableScrollOffset.value > 0 && _scrollController.hasClients) {
+        _scrollController.jumpTo(_restorableScrollOffset.value);
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _scrollController.addListener(_scrollListener);
+    _scrollController.addListener(() {
+      _restorableScrollOffset.value = _scrollController.offset;
+      _scrollListener();
+    });
   }
 
   void _scrollListener() {
@@ -80,6 +120,8 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
   void dispose() {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _restorableIndex.dispose();
+    _restorableScrollOffset.dispose();
     super.dispose();
   }
 
@@ -89,6 +131,14 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
       backgroundColor: AppTheme.primaryColor,
       body: BlocBuilder<BottomNavCubit, BottomNavState>(
         builder: (context, navState) {
+          // keep RestorableIndex in sync whenever cubit changes
+          // (register a one-time listener)
+          // Note: avoid duplicate listeners; this only ensures sync after build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_restorableIndex.value != navState.selectedIndex) {
+              _restorableIndex.value = navState.selectedIndex;
+            }
+          });
           return NotificationListener<UserScrollNotification>(
             onNotification: (notification) {
               if (notification.direction == ScrollDirection.reverse) {
@@ -199,12 +249,7 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                     const SizedBox(width: 10),
                     IconButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AccountsPage(),
-                          ),
-                        );
+                        Navigator.restorablePush(context, _accountsRoute);
                       },
                       icon: Icon(Icons.person, color: iconColor),
                     ),
@@ -239,14 +284,13 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                                     builder: (BuildContext context) {
                                       return GestureDetector(
                                         onTap: () {
-                                          Navigator.push(
+                                          Navigator.restorablePush(
                                             context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  SingleWallpaperScreen(
-                                                    image: image,
-                                                  ),
-                                            ),
+                                            SingleWallpaperScreen.routeBuilder,
+                                            arguments: {
+                                              'large': image['src']['large2x'],
+                                              'medium': image['src']['medium'],
+                                            },
                                           );
                                         },
                                         child: Container(
@@ -293,6 +337,7 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                                 ),
                                 TextButton(
                                   onPressed: () {
+                                    // navigate using restorable push with a simple serializable arg (index/category)
                                     context.read<BottomNavCubit>().updateIndex(
                                       3,
                                     );
@@ -320,15 +365,11 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                                     ) {
                                       return GestureDetector(
                                         onTap: () {
-                                          Navigator.push(
+                                          Navigator.restorablePush(
                                             context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  AllWallpapersPage(
-                                                    category:
-                                                        categoryImages[index]['name']!,
-                                                  ),
-                                            ),
+                                            _allWallpapersRoute,
+                                            arguments:
+                                                categoryImages[index]['name']!,
                                           );
                                         },
                                         child: Stack(
@@ -462,13 +503,14 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                       padding: EdgeInsets.only(top: topPadding),
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
+                          final src =
+                              gridImages[index]['src'] as Map<String, dynamic>;
+                          final large = src['large2x'] ?? src['large'] ?? '';
+                          final medium = src['medium'] ?? '';
+                          Navigator.restorablePush(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => SingleWallpaperScreen(
-                                image: gridImages[index],
-                              ),
-                            ),
+                            SingleWallpaperScreen.routeBuilder,
+                            arguments: {'large': large, 'medium': medium},
                           );
                         },
                         child: Stack(

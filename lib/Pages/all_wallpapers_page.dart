@@ -292,12 +292,15 @@ class _AllWallpapersViewState extends State<_AllWallpapersView> {
 
                           return GestureDetector(
                             onTap: () {
-                              Navigator.push(
+                              final src =
+                                  wallpaper['src'] as Map<String, dynamic>;
+                              final large =
+                                  src['large2x'] ?? src['large'] ?? '';
+                              final medium = src['medium'] ?? '';
+                              Navigator.restorablePush(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      SingleWallpaperScreen(image: wallpaper),
-                                ),
+                                SingleWallpaperScreen.routeBuilder,
+                                arguments: {'large': large, 'medium': medium},
                               );
                             },
                             child: Stack(

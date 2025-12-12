@@ -6,11 +6,27 @@ import 'package:wallpapers/blocs/wallpaper_set_cubit.dart';
 import 'package:wallpapers/blocs/wallpaper_set_state.dart';
 import 'package:wallpapers/Functions/set_wallpaper.dart';
 import 'package:wallpapers/utils/apptheme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SingleWallpaperScreen extends StatefulWidget {
-  final dynamic image;
+  final String largeUrl;
+  final String mediumUrl;
 
-  const SingleWallpaperScreen({super.key, required this.image});
+  const SingleWallpaperScreen({
+    super.key,
+    required this.largeUrl,
+    required this.mediumUrl,
+  });
+
+  static Route<Object?> routeBuilder(BuildContext context, Object? args) {
+    final map = args as Map?;
+    final large = map != null ? map['large'] as String? : null;
+    final medium = map != null ? map['medium'] as String? : null;
+    return MaterialPageRoute(
+      builder: (_) =>
+          SingleWallpaperScreen(largeUrl: large ?? '', mediumUrl: medium ?? ''),
+    );
+  }
 
   @override
   State<SingleWallpaperScreen> createState() => _SingleWallpaperScreenState();
@@ -20,9 +36,23 @@ class _SingleWallpaperScreenState extends State<SingleWallpaperScreen> {
   bool _isFavorite = false;
 
   @override
+  void initState() {
+    super.initState();
+    _saveLastOpened();
+  }
+
+  Future<void> _saveLastOpened() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('last_large', widget.largeUrl);
+      await prefs.setString('last_medium', widget.mediumUrl);
+    } catch (_) {}
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final imageUrl = widget.image['src']['large2x'];
-    final blurImageUrl = widget.image['src']['medium'];
+    final imageUrl = widget.largeUrl;
+    final blurImageUrl = widget.mediumUrl;
 
     return Scaffold(
       body: Stack(
@@ -226,7 +256,7 @@ class _SingleWallpaperScreenState extends State<SingleWallpaperScreen> {
   }
 
   void _showSetWallpaperOptions(BuildContext context) {
-    final imageUrl = widget.image['src']['large2x'];
+    final imageUrl = widget.largeUrl;
 
     showModalBottomSheet(
       context: context,
