@@ -28,18 +28,15 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _tryRestoreLastOpened() async {
-    // Wait a moment for widgets to bind and for the MaterialApp to build
     await Future.delayed(const Duration(milliseconds: 300));
     final prefs = await SharedPreferences.getInstance();
     final large = prefs.getString('last_large');
     final medium = prefs.getString('last_medium');
     if (large != null && large.isNotEmpty && _navKey.currentContext != null) {
-      // Use restorablePush to restore the single wallpaper screen
       WidgetsBinding.instance.addPostFrameCallback((_) {
         try {
           Navigator.restorablePush(
             _navKey.currentContext!,
-            // route builder will be resolved by the screen's static method
             SingleWallpaperScreen.routeBuilder,
             arguments: {'large': large, 'medium': medium ?? ''},
           );
