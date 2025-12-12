@@ -5,11 +5,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:wallpapers/Pages/accounts_page.dart';
+import 'package:wallpapers/Pages/all_wallpapers_page.dart';
+import 'package:wallpapers/Pages/singlewallpaperscreen.dart';
 import 'package:wallpapers/blocs/app_bar_cubit.dart';
 import 'package:wallpapers/blocs/wallpaper_cubit.dart';
 import 'package:wallpapers/blocs/wallpaper_state.dart';
 import 'package:wallpapers/utils/apptexts.dart';
+import 'package:wallpapers/blocs/bottom_nav_cubit.dart';
 import 'package:wallpapers/utils/apptheme.dart';
+import 'package:flutter/rendering.dart';
+import 'package:wallpapers/widgets/custom_bottom_nav_bar.dart';
+import 'package:wallpapers/Pages/categories.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
       providers: [
         BlocProvider(create: (context) => AppBarCubit()),
         BlocProvider(create: (context) => WallpaperCubit()..getWallpapers()),
+        BlocProvider(create: (context) => BottomNavCubit()),
       ],
       child: const Scaffold(
         backgroundColor: AppTheme.primaryColor,
@@ -79,7 +87,45 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryColor,
-      body: _customsliverappbar(context),
+      body: BlocBuilder<BottomNavCubit, BottomNavState>(
+        builder: (context, navState) {
+          return NotificationListener<UserScrollNotification>(
+            onNotification: (notification) {
+              if (notification.direction == ScrollDirection.reverse) {
+                context.read<BottomNavCubit>().setVisibility(false);
+              } else if (notification.direction == ScrollDirection.forward) {
+                context.read<BottomNavCubit>().setVisibility(true);
+              }
+              return true;
+            },
+            child: Stack(
+              children: [
+                IndexedStack(
+                  index: navState.selectedIndex,
+                  children: [
+                    _customsliverappbar(context), // Home
+                    const AllWallpapersPage(), // All
+                    const Center(child: Text("Favourites")), // Favourites
+                    const CategoriesPage(), // Categories
+                  ],
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CustomBottomNavBar(
+                    selectedIndex: navState.selectedIndex,
+                    isVisible: navState.isVisible,
+                    onItemSelected: (index) {
+                      context.read<BottomNavCubit>().updateIndex(index);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -152,7 +198,14 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                     ),
                     const SizedBox(width: 10),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AccountsPage(),
+                          ),
+                        );
+                      },
                       icon: Icon(Icons.person, color: iconColor),
                     ),
                   ],
@@ -184,79 +237,29 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                                 items: carouselImages.map((image) {
                                   return Builder(
                                     builder: (BuildContext context) {
-                                      return Container(
-                                        width: size.width,
-                                        margin: const EdgeInsets.symmetric(
-                                          horizontal: 5.0,
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            15,
-                                          ),
-                                          child: CachedNetworkImage(
-                                            imageUrl: image['src']['large2x'],
-                                            fit: BoxFit.cover,
-                                            placeholder: (context, url) =>
-                                                Shimmer.fromColors(
-                                                  baseColor: Colors.grey[300]!,
-                                                  highlightColor:
-                                                      Colors.grey[100]!,
-                                                  child: Container(
-                                                    color: Colors.white,
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SingleWallpaperScreen(
+                                                    image: image,
                                                   ),
-                                                ),
-                                            errorWidget:
-                                                (context, url, error) =>
-                                                    const Icon(Icons.error),
+                                            ),
+                                          );
+                                        },
+                                        child: Container(
+                                          width: size.width,
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 5.0,
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            const SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                customText.semiboldText(
-                                  text: "Categories",
-                                  color: AppTheme.secondaryColor,
-                                  size: 20,
-                                ),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: customText.lightText(
-                                    text: "View All",
-                                    color: AppTheme.tertiaryColor,
-                                    size: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            if (categoryImages.isNotEmpty)
-                              SizedBox(
-                                height: size.width * 0.25,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: List.generate(categoryImages.length, (
-                                    index,
-                                  ) {
-                                    return Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        SizedBox(
-                                          height: size.width * 0.22,
-                                          width: size.width * 0.20,
                                           child: ClipRRect(
                                             borderRadius: BorderRadius.circular(
                                               15,
                                             ),
                                             child: CachedNetworkImage(
-                                              imageUrl:
-                                                  categoryImages[index]['img']!,
+                                              imageUrl: image['src']['large2x'],
                                               fit: BoxFit.cover,
                                               placeholder: (context, url) =>
                                                   Shimmer.fromColors(
@@ -274,26 +277,114 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
                                             ),
                                           ),
                                         ),
-                                        Container(
-                                          height: size.width * 0.22,
-                                          width: size.width * 0.20,
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.3,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              15,
-                                            ),
-                                          ),
-                                        ),
-                                        customText.lightText(
-                                          text: categoryImages[index]['name']!,
-                                          color: AppTheme.primaryColor,
-                                          size: 14,
-                                        ),
-                                      ],
+                                      );
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                customText.semiboldText(
+                                  text: "Categories",
+                                  color: AppTheme.secondaryColor,
+                                  size: 20,
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    context.read<BottomNavCubit>().updateIndex(
+                                      3,
                                     );
-                                  }),
+                                  },
+                                  child: customText.lightText(
+                                    text: "View All",
+                                    color: AppTheme.tertiaryColor,
+                                    size: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            if (categoryImages.isNotEmpty)
+                              SizedBox(
+                                height: size.width * 0.25,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    spacing: 10,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: List.generate(categoryImages.length, (
+                                      index,
+                                    ) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AllWallpapersPage(
+                                                    category:
+                                                        categoryImages[index]['name']!,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            SizedBox(
+                                              height: size.width * 0.22,
+                                              width: size.width * 0.20,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                child: CachedNetworkImage(
+                                                  imageUrl:
+                                                      categoryImages[index]['img']!,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) =>
+                                                      Shimmer.fromColors(
+                                                        baseColor:
+                                                            Colors.grey[300]!,
+                                                        highlightColor:
+                                                            Colors.grey[100]!,
+                                                        child: Container(
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          const Icon(
+                                                            Icons.error,
+                                                          ),
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              height: size.width * 0.22,
+                                              width: size.width * 0.20,
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.3,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                            ),
+                                            customText.lightText(
+                                              text:
+                                                  categoryImages[index]['name']!,
+                                              color: AppTheme.primaryColor,
+                                              size: 12,
+                                              weight: FontWeight.w300,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
+                                  ),
                                 ),
                               ),
                           ],
@@ -369,45 +460,57 @@ class _HomeScreenViewState extends State<_HomeScreenView> {
 
                     return Padding(
                       padding: EdgeInsets.only(top: topPadding),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: AspectRatio(
-                              aspectRatio: 204 / 362,
-                              child: CachedNetworkImage(
-                                imageUrl: gridImages[index]['src']['tiny'],
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) =>
-                                    Shimmer.fromColors(
-                                      baseColor: Colors.grey[300]!,
-                                      highlightColor: Colors.grey[100]!,
-                                      child: Container(color: Colors.white),
-                                    ),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SingleWallpaperScreen(
+                                image: gridImages[index],
                               ),
                             ),
-                          ),
-                          Positioned(
-                            bottom: 8,
-                            left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(5),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppTheme.primaryColor.withValues(
-                                  alpha: 0.3,
+                          );
+                        },
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: AspectRatio(
+                                aspectRatio: 204 / 362,
+                                child: CachedNetworkImage(
+                                  imageUrl: gridImages[index]['src']['medium'],
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) =>
+                                      Shimmer.fromColors(
+                                        baseColor: Colors.grey[300]!,
+                                        highlightColor: Colors.grey[100]!,
+                                        child: Container(color: Colors.white),
+                                      ),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.error),
                                 ),
                               ),
-                              child: const Icon(
-                                Icons.favorite_border_outlined,
-                                color: AppTheme.primaryColor,
-                                size: 16,
+                            ),
+                            Positioned(
+                              bottom: 8,
+                              left: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppTheme.primaryColor.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.favorite_border_outlined,
+                                  color: AppTheme.primaryColor,
+                                  size: 16,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     );
                   },

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' hide log;
 import 'package:http/http.dart' as http;
+import 'package:wallpapers/Data/Pexels%20Data/pexelsapi.dart';
 
 class Datafetch {
   var images = <dynamic>[];
@@ -15,10 +16,7 @@ class Datafetch {
         Uri.parse(
           'https://api.pexels.com/v1/curated?per_page=$perPage&page=$page',
         ),
-        headers: {
-          'Authorization':
-              'OGVna34mQA0FdeWzBOCxHOxOuOX9UST6udBQRz2XWFqzHNOfbZrIEYVq',
-        },
+        headers: {'Authorization': PexelsApi.authorizationkey.toString()},
       );
 
       log("Status code: ${response.statusCode}");
@@ -45,10 +43,7 @@ class Datafetch {
     try {
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Authorization':
-              'OGVna34mQA0FdeWzBOCxHOxOuOX9UST6udBQRz2XWFqzHNOfbZrIEYVq',
-        },
+        headers: {'Authorization': PexelsApi.authorizationkey.toString()},
       );
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         isloading = false;
@@ -68,15 +63,12 @@ class Datafetch {
     try {
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Authorization':
-              'OGVna34mQA0FdeWzBOCxHOxOuOX9UST6udBQRz2XWFqzHNOfbZrIEYVq',
-        },
+        headers: {'Authorization': PexelsApi.authorizationkey.toString()},
       );
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         var result = jsonDecode(response.body);
         if (result['photos'].isNotEmpty) {
-          return result['photos'][0]['src']['tiny'];
+          return result['photos'][0]['src']['large'];
         }
       }
     } catch (e) {

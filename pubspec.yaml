@@ -1,6 +1,6 @@
 name: wallpapers
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -9,6 +9,7 @@ environment:
 dependencies:
   cached_network_image: ^3.4.1
   carousel_slider: ^5.1.1
+  equatable: ^2.0.7
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
@@ -17,12 +18,26 @@ dependencies:
   google_fonts: ^6.3.3
   http: ^1.6.0
   shimmer: ^3.0.0
+  video_player: ^2.9.2
   wallpaper_manager_plus: ^2.0.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.2
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icons_animated/
+    - assets/settings_icons/
+    - assets/app_logo/
+    - assets/app_splashscreen/
+
+flutter_native_splash:
+  color: "#000000"
+  image: assets/app_logo/logo.jpg
+  android_12:
+    image: assets/app_logo/logo.jpg
+    color: "#000000"
