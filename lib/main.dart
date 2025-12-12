@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+<<<<<<< HEAD
 import 'package:wallpapers/Pages/homescreen.dart';
 import 'package:wallpapers/Pages/singlewallpaperscreen.dart';
+=======
+import 'package:wallpapers/Pages/splash_screen.dart';
+>>>>>>> parent of bb24ed4 (removed splash screen added icon)
 import 'package:wallpapers/blocs/app_bar_cubit.dart';
 import 'package:wallpapers/blocs/bottom_nav_cubit.dart';
 import 'package:wallpapers/blocs/wallpaper_cubit.dart';
@@ -65,7 +69,7 @@ class _MyAppState extends State<MyApp> {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const HomeScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

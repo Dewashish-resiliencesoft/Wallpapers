@@ -27,7 +27,6 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_native_splash: ^2.4.2
-  flutter_launcher_icons: ^0.14.2
 
 flutter:
   uses-material-design: true
@@ -38,15 +37,8 @@ flutter:
     - assets/app_splashscreen/
 
 flutter_native_splash:
-  color: "#FFFFFF"
+  color: "#000000"
   image: assets/app_logo/logo.jpg
   android_12:
     image: assets/app_logo/logo.jpg
-    color: "#FFFFFF"
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/app_logo/logo.jpg"
-  adaptive_icon_background: "#000000"
-  adaptive_icon_foreground: "assets/app_logo/logo.jpg"
+    color: "#000000"
