@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wallpapers/Pages/splash_screen.dart';
+import 'package:wallpapers/Pages/homescreen.dart';
 import 'package:wallpapers/blocs/app_bar_cubit.dart';
 import 'package:wallpapers/blocs/bottom_nav_cubit.dart';
 import 'package:wallpapers/blocs/wallpaper_cubit.dart';
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const SplashScreen(),
+        home: const HomeScreen(),
       ),
     );
   }
